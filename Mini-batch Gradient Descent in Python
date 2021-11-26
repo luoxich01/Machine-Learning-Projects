@@ -1,5 +1,5 @@
 '''
-This program to implement mini-batch gradient descent to optimize the logistic regression
+This program is to implement mini-batch gradient descent to optimize the logistic regression
 '''
 
 import random
