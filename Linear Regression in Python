@@ -1,0 +1,104 @@
+'''
+Approach: main + helper function 
+
+main function:
+    the high level logic
+helper function:
+    detailed implementation
+
+'''
+
+import random
+
+# step 1: assign the parameters
+def initialize_params(dimensions):
+    beta_0 = 0
+    # beta_other: size of n, and each of them is assigned a random value
+    beta_other = [random.random() for _ in range(dimensions)]
+    return beta_0, beta_other
+
+# step 2: compute the gradient
+def compute_gradient(x, y, beta_0, beta_other, dimension, m):
+    gradient_beta_0 = 0
+    gradient_beta_other = [0] * dimension
+    
+    for i in range(m):
+        y_i_hat = sum(x[i][j] * beta_other[j] for j in range(dimension)) + beta_0
+        # difference between y_i_hat and the observation y[i]
+        # it is also the derivative of the error over y: 2*(observation - prediction)
+        derror_dy = 2 * (y[i] - y_i_hat)
+        # calculate the gradient of betas
+        for j in range(dimension):
+            gradient_beta_other[j] += derror_dy * x[i][j] / dimension
+        gradient_beta_0 += derror_dy / dimension
+        
+# step 3: update the betas using the gradient that we obtain in step 2
+def update_params(beta_0, beta_other, gradient_beta_0, gradient_beta_other, learning_rate):
+    # instead of adding the gradient to the beta, we actually scale the beta based on the learning rate
+    '''
+    learning rate is the speed of the movement of gradient during the gradient descend
+    learning rate:
+          - too high: unstable
+          - too low: slow to converge
+    '''
+    # we add back the scaled gradient because:
+    '''
+    derror_dy = y[i] - y_hat_i 
+    If y_hat_i is overestimated, then the derror_dy will be negative value
+    beta = beta + negative gradient
+    '''
+    beta_0 += gradient_beta_0 * learning_rate
+    for i in range(len(beta_other)):
+        beta_other[i] += (gradient_beta_other[i] * learning_rate)
+    return beta_0, beta_other
+    
+
+def linear_regression(x,y,iterations = 100, learning_rate = 0.01):
+    n, m = len(x[0]), len(x)
+    # initialize the parameters based on the dimension of the input data
+    '''
+    input data is expected to be a wide table
+    
+        x_0  x_1  ...  x_n
+    1
+    2
+    3
+    ...
+    m
+    
+    with N columns (features) and M data points
+    
+    '''
+    beta_0, beta_other = initialize_params(n)
+    for _ in range(iterations):
+        # calculate the gradient of betas
+        gradient_beta_0, gradient_beta_other = compute_gradient(x, y, beta_0, beta_other, n, m)
+        # then use the gradient to update the values of each beta
+        beta_0, beta_other = update_params(beta_0, beta_other, gradient_beta_0, gradient_beta_other, learning_rate)
+        # repeat the above steps multiple times
+    return beta_0, beta_other
+
+'''
+Conclusion of space & time complexity
+
+Time complexity:
+    
+    computer gradient: 
+        time complexity: O(MN)
+    
+    update betas:
+        time complexity: O(N)
+        
+    linear regression:
+        interate I times
+    
+    Whole program time complexity: O(MNI)
+
+Space complexity:
+    
+    beta_0, gradient_beta_0: single value - O(1)
+    beta_0, gradient_beta_other: N values - O(N)
+    
+    Thus the space complexity: O(N)
+
+'''
