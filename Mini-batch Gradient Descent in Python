@@ -1,0 +1,89 @@
+'''
+This program to implement mini-batch gradient descent to optimize the logistic regression
+'''
+
+import random
+import numpy as np
+
+# step 1: assign the parameters
+def initialize_params(dimensions):
+    beta_0 = 0
+    # beta_other: size of n, and each of them is assigned a random value
+    beta_other = [random.random() for _ in range(dimensions)]
+    return beta_0, beta_other
+
+# step 2: compute the gradient
+def logistic_function(point, beta_0, beta_other):
+    return 1/(1 + np.exp(-(beta_0 + point.dot(beta_other))))
+
+# ------------------------------------------------------------------------------------------------------
+
+# Mini-batch application function
+
+def compute_gradient_minibatch(x, y, beta_0, beta_other, m, n, batch_size):
+    gradient_beta_0 = 0
+    # define other beta as a vector of 0s
+    gradient_beta_other = [0] * n
+    
+    for _ in range(batch_size):
+        # i is between 0 and m - 1 (both inclusive), noting that we have m data points
+        i = random.randint(0, m - 1)
+        # point is row i in x
+        point = x[i]
+        pred = logistic_function(point, beta_0, beta_other)
+        for j, feature in enumerate(point):
+            gradient_beta_other[j] += (pred - y[i]) * feature / m
+        # obtain the gradient for beta_0
+        gradient_beta_0 += (pred - y[i]) / m
+        
+    return gradient_beta_0, gradient_beta_other
+
+# -------------------------------------------------------------------------------------------------------
+        
+# step 3: update the betas using the gradient that we obtain in step 2
+def update_params(beta_0, beta_other, gradient_beta_0, gradient_beta_other, learning_rate):
+    # instead of adding the gradient to the beta, we actually scale the beta based on the learning rate
+    '''
+    learning rate is the speed of the movement of gradient during the gradient descend
+    learning rate:
+          - too high: unstable
+          - too low: slow to converge
+    '''
+    # we minus the scaled gradient because:
+    '''
+    derror_dy = pred - y[i]
+    If pred is overestimated, then the derror_dy will be positive value
+    beta_new = beta_old + positive gradient
+    (If we do the other way, just add back instead of minus)
+    '''
+    beta_0 -= gradient_beta_0 * learning_rate
+    for i in range(len(beta_other)):
+        beta_other[i] -= (gradient_beta_other[i] * learning_rate)
+    return beta_0, beta_other
+    
+
+def logistic_regression(x, y, iterations = 100, learning_rate = 0.01):
+    n, m = len(x[0]), len(x)
+    # initialize the parameters based on the dimension of the input data
+    '''
+    input data is expected to be a wide table
+    
+        x_0  x_1  ...  x_n
+    1
+    2
+    3
+    ...
+    m
+    
+    with N columns (features) and M data points
+    
+    '''
+    # seperately define beta_0 and beta_other because they share different form of gradients
+    beta_0, beta_other = initialize_params(n)
+    for _ in range(iterations):
+        # calculate the gradient of betas
+        gradient_beta_0, gradient_beta_other = compute_gradient_minibatch(x, y, beta_0, beta_other, m, n, 50)
+        # then use the gradient to update the values of each beta
+        beta_0, beta_other = update_params(beta_0, beta_other, gradient_beta_0, gradient_beta_other, learning_rate)
+        # repeat the above steps for the iteration times we assign
+    return beta_0, beta_other
